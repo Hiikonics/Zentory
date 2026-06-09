@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zentory - Procurement</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/pages.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h3>Zentory</h3>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">Dashboard</a>
+                <a href="inventory.html" class="nav-item">Inventory</a>
+                <a href="procurement.html" class="nav-item active">Procurement</a>
+                <a href="pos.html" class="nav-item">POS</a>
+                <a href="sales-returns.html" class="nav-item">Sales Returns</a>
+                <a href="audit-logs.html" class="nav-item">Audit Logs</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h1>Procurement</h1>
+                <p>Kelola pesanan pembelian dan supplier</p>
+            </div>
+
+            <div class="controls">
+                <input type="text" class="search-box" placeholder="Cari PO...">
+                <button class="btn">Filter</button>
+                <button class="btn btn-primary">+ Create PO</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>PO ID</th>
+                            <th>Supplier</th>
+                            <th>Items</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                            <th>Due Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="procurementTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const procurementData = [
+            { poId: "PO-2024-089", supplier: "PT Sumber Makmur", items: 5, total: "Rp 12.500.000", status: "pending", dueDate: "2024-12-20" },
+            { poId: "PO-2024-090", supplier: "CV Berkah Jaya", items: 3, total: "Rp 8.200.000", status: "approved", dueDate: "2024-12-22" },
+            { poId: "PO-2024-088", supplier: "PT Sumber Makmur", items: 8, total: "Rp 25.000.000", status: "delivered", dueDate: "2024-12-10" },
+            { poId: "PO-2024-087", supplier: "Supplier ABC", items: 4, total: "Rp 15.500.000", status: "in_transit", dueDate: "2024-12-18" },
+            { poId: "PO-2024-086", supplier: "CV Berkah Jaya", items: 6, total: "Rp 18.900.000", status: "cancelled", dueDate: "2024-12-15" },
+        ];
+
+        function getStatusBadge(status) {
+            const statusMap = {
+                'pending': { class: 'badge-warning', text: 'Pending' },
+                'approved': { class: 'badge-info', text: 'Approved' },
+                'in_transit': { class: 'badge-info', text: 'In Transit' },
+                'delivered': { class: 'badge-success', text: 'Delivered' },
+                'cancelled': { class: 'badge-danger', text: 'Cancelled' }
+            };
+            const info = statusMap[status] || statusMap['pending'];
+            return `<span class="badge ${info.class}">${info.text}</span>`;
+        }
+
+        function renderProcurement() {
+            const table = document.getElementById('procurementTable');
+            table.innerHTML = procurementData.map(item => `
+                <tr>
+                    <td>${item.poId}</td>
+                    <td>${item.supplier}</td>
+                    <td>${item.items}</td>
+                    <td>${item.total}</td>
+                    <td>${getStatusBadge(item.status)}</td>
+                    <td>${item.dueDate}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-small">View</button>
+                            <button class="btn btn-small">Edit</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', renderProcurement);
+    </script>
+</body>
+</html>

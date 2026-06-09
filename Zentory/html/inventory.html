@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zentory - Inventory Management</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/pages.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h3>Zentory</h3>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">Dashboard</a>
+                <a href="inventory.html" class="nav-item active">Inventory</a>
+                <a href="procurement.html" class="nav-item">Procurement</a>
+                <a href="pos.html" class="nav-item">POS</a>
+                <a href="sales-returns.html" class="nav-item">Sales Returns</a>
+                <a href="audit-logs.html" class="nav-item">Audit Logs</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h1>Inventory Management</h1>
+                <p>Kelola dan pantau stok produk Anda</p>
+            </div>
+
+            <div class="controls">
+                <input type="text" class="search-box" placeholder="Cari produk...">
+                <button class="btn">Filter</button>
+                <button class="btn btn-primary">+ Add Product</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Nama Produk</th>
+                            <th>Kategori</th>
+                            <th>Stock</th>
+                            <th>Reorder Point</th>
+                            <th>Status</th>
+                            <th>Turnover Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const inventoryData = [
+            { sku: "BEV-001", name: "Mineral Water 600ml", category: "Beverages", stock: 342, reorder: 100, status: "active", turnover: "4.2" },
+            { sku: "BEV-002", name: "Orange Juice 1L", category: "Beverages", stock: 45, reorder: 100, status: "low", turnover: "3.8" },
+            { sku: "SNK-001", name: "Potato Chips 50g", category: "Snacks", stock: 156, reorder: 50, status: "active", turnover: "6.1" },
+            { sku: "SNK-002", name: "Biscuits Mix 200g", category: "Snacks", stock: 8, reorder: 50, status: "critical", turnover: "2.3" },
+            { sku: "TOI-001", name: "Soap Bar 100g", category: "Toiletries", stock: 234, reorder: 50, status: "active", turnover: "5.2" },
+            { sku: "DAI-001", name: "Fresh Milk 1L", category: "Dairy", stock: 0, reorder: 75, status: "dead", turnover: "0.1" },
+            { sku: "FRZ-001", name: "Ice Cream Cup 75ml", category: "Frozen", stock: 89, reorder: 100, status: "low", turnover: "2.9" },
+            { sku: "BEV-003", name: "Coffee Powder 250g", category: "Beverages", stock: 521, reorder: 100, status: "active", turnover: "7.4" },
+        ];
+
+        function getStatusBadge(status) {
+            const statusMap = {
+                'active': { class: 'badge-success', text: 'Active' },
+                'low': { class: 'badge-warning', text: 'Low Stock' },
+                'critical': { class: 'badge-danger', text: 'Critical' },
+                'dead': { class: 'badge-danger', text: 'Dead Stock' }
+            };
+            const info = statusMap[status] || statusMap['active'];
+            return `<span class="badge ${info.class}">${info.text}</span>`;
+        }
+
+        function renderInventory() {
+            const table = document.getElementById('inventoryTable');
+            table.innerHTML = inventoryData.map(item => `
+                <tr>
+                    <td>${item.sku}</td>
+                    <td>${item.name}</td>
+                    <td>${item.category}</td>
+                    <td>${item.stock}</td>
+                    <td>${item.reorder}</td>
+                    <td>${getStatusBadge(item.status)}</td>
+                    <td>${item.turnover} days</td>
+                </tr>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', renderInventory);
+    </script>
+</body>
+</html>

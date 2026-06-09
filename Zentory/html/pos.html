@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zentory - Point of Sale</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/pages.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h3>Zentory</h3>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">Dashboard</a>
+                <a href="inventory.html" class="nav-item">Inventory</a>
+                <a href="procurement.html" class="nav-item">Procurement</a>
+                <a href="pos.html" class="nav-item active">POS</a>
+                <a href="sales-returns.html" class="nav-item">Sales Returns</a>
+                <a href="audit-logs.html" class="nav-item">Audit Logs</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h1>Point of Sale</h1>
+                <p>Proses transaksi penjualan</p>
+            </div>
+
+            <div class="pos-container">
+                <div>
+                    <input type="text" class="search-box" placeholder="Cari produk...">
+                    <div class="products-grid" id="productsGrid">
+                    </div>
+                </div>
+
+                <div class="cart">
+                    <div class="cart-title">Shopping Cart</div>
+                    <div class="cart-items" id="cartItems">
+                        <p style="text-align: center; color: var(--muted-foreground); font-size: 12px; padding: 20px 0;">Cart is empty</p>
+                    </div>
+                    <div class="cart-summary" id="cartSummary">
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">Rp 0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax (10%):</span>
+                            <span id="tax">Rp 0</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total:</span>
+                            <span id="total">Rp 0</span>
+                        </div>
+                    </div>
+                    <button class="btn-large">💳 Process Payment</button>
+                    <button class="btn">🔄 Clear Cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const products = [
+            { id: 1, name: "Water 600ml", price: 5000, emoji: "💧" },
+            { id: 2, name: "Orange Juice", price: 12000, emoji: "🧃" },
+            { id: 3, name: "Chips", price: 8000, emoji: "🍟" },
+            { id: 4, name: "Cookies", price: 6000, emoji: "🍪" },
+            { id: 5, name: "Milk 1L", price: 15000, emoji: "🥛" },
+            { id: 6, name: "Soap", price: 10000, emoji: "🧼" },
+            { id: 7, name: "Toothpaste", price: 25000, emoji: "🪥" },
+            { id: 8, name: "Shampoo", price: 30000, emoji: "🧴" },
+        ];
+
+        let cart = [];
+
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = products.map(product => `
+                <div class="product-card" onclick="addToCart(${product.id})">
+                    <div class="product-image">${product.emoji}</div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-price">Rp ${product.price.toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            const existingItem = cart.find(item => item.id === productId);
+
+            if (existingItem) {
+                existingItem.qty++;
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+
+            updateCart();
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCart();
+        }
+
+        function updateQuantity(productId, qty) {
+            const item = cart.find(i => i.id === productId);
+            if (item) {
+                if (qty <= 0) {
+                    removeFromCart(productId);
+                } else {
+                    item.qty = qty;
+                    updateCart();
+                }
+            }
+        }
+
+        function updateCart() {
+            const cartItemsDiv = document.getElementById('cartItems');
+            
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = '<p style="text-align: center; color: var(--muted-foreground); font-size: 12px; padding: 20px 0;">Cart is empty</p>';
+            } else {
+                cartItemsDiv.innerHTML = cart.map(item => `
+                    <div class="cart-item">
+                        <span class="cart-item-name">${item.name}</span>
+                        <div class="cart-item-qty">
+                            <button class="qty-btn" onclick="updateQuantity(${item.id}, ${item.qty - 1})">-</button>
+                            <span style="width: 20px; text-align: center;">${item.qty}</span>
+                            <button class="qty-btn" onclick="updateQuantity(${item.id}, ${item.qty + 1})">+</button>
+                        </div>
+                        <span class="cart-item-total">Rp ${(item.price * item.qty).toLocaleString()}</span>
+                        <span class="cart-item-remove" onclick="removeFromCart(${item.id})">×</span>
+                    </div>
+                `).join('');
+            }
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const tax = Math.round(subtotal * 0.1);
+            const total = subtotal + tax;
+
+            document.getElementById('subtotal').textContent = `Rp ${subtotal.toLocaleString()}`;
+            document.getElementById('tax').textContent = `Rp ${tax.toLocaleString()}`;
+            document.getElementById('total').textContent = `Rp ${total.toLocaleString()}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', renderProducts);
+    </script>
+</body>
+</html>

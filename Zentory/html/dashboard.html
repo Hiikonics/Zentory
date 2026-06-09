@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zentory - Manager Dashboard</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/pages.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div style="margin-bottom: 30px;">
+                <h3 style="margin-bottom: 30px;">Zentory</h3>
+                <nav class="nav-menu">
+                    <a href="dashboard.html" class="nav-item active">Dashboard</a>
+                    <a href="inventory.html" class="nav-item">Inventory</a>
+                    <a href="procurement.html" class="nav-item">Procurement</a>
+                    <a href="pos.html" class="nav-item">POS</a>
+                    <a href="sales-returns.html" class="nav-item">Sales Returns</a>
+                    <a href="audit-logs.html" class="nav-item">Audit Logs</a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="dashboard-container">
+                <!-- Header -->
+                <div class="dashboard-header">
+                    <div class="header-left">
+                        <h1>Manager Dashboard</h1>
+                        <p>Strategic overview — June 2026</p>
+                    </div>
+                    <div class="last-synced">
+                        <span>🕐</span>
+                        <span>Last synced: Today, 09:41 AM</span>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="grid grid-4" id="kpiContainer"></div>
+
+                <!-- Revenue Trend & Stock Classification -->
+                <div class="grid grid-3-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Revenue & Stock Trend</h2>
+                            <span class="card-subtitle">Last 6 months</span>
+                        </div>
+                        <canvas id="revenueChart" style="width: 100%; height: 250px;"></canvas>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 16px;">Stock Classification</h2>
+                        <div id="stockMatrix"></div>
+                    </div>
+                </div>
+
+                <!-- Category Bar Chart & AI Recommendations -->
+                <div class="grid grid-3-2">
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 16px;">Stock by Category</h2>
+                        <canvas id="categoryChart" style="width: 100%; height: 220px;"></canvas>
+                    </div>
+
+                    <div class="card ai-section">
+                        <div class="ai-header">
+                            <div class="ai-icon">⚡</div>
+                            <h2>AI Recommendations</h2>
+                        </div>
+                        <div class="recommendations-list" id="recommendationsContainer"></div>
+                        <button class="btn-large">View All Recommendations →</button>
+                    </div>
+                </div>
+
+                <!-- Pending Approvals -->
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div class="approvals-header">
+                        <div class="approvals-title">
+                            <h2>Pending Approvals</h2>
+                            <span class="badge badge-danger" id="approvalCount">0</span>
+                        </div>
+                        <a class="view-all-link">View All</a>
+                    </div>
+                    <div id="approvalsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data
+        const salesTrend = [
+            { month: "Jan", revenue: 42000000, stock: 3200 },
+            { month: "Feb", revenue: 51000000, stock: 2900 },
+            { month: "Mar", revenue: 47000000, stock: 3100 },
+            { month: "Apr", revenue: 63000000, stock: 2700 },
+            { month: "May", revenue: 58000000, stock: 3400 },
+            { month: "Jun", revenue: 72000000, stock: 3600 },
+        ];
+
+        const categoryStock = [
+            { category: "Beverages", fastMoving: 420, slowMoving: 180, deadStock: 45 },
+            { category: "Snacks", fastMoving: 310, slowMoving: 220, deadStock: 80 },
+            { category: "Toiletries", fastMoving: 190, slowMoving: 140, deadStock: 30 },
+            { category: "Dairy", fastMoving: 380, slowMoving: 90, deadStock: 15 },
+            { category: "Frozen", fastMoving: 150, slowMoving: 200, deadStock: 60 },
+        ];
+
+        const pendingApprovals = [
+            { id: "PO-2024-089", type: "Purchase Order", supplier: "PT Sumber Makmur", amount: "Rp 12.500.000", urgency: "high" },
+            { id: "PO-2024-090", type: "Purchase Order", supplier: "CV Berkah Jaya", amount: "Rp 8.200.000", urgency: "medium" },
+            { id: "ADJ-2024-031", type: "Stock Adjustment", supplier: "Admin: Dewi R.", amount: "-45 units (Variance)", urgency: "low" },
+        ];
+
+        const kpiCards = [
+            { label: "Total Revenue (Jun)", value: "Rp 72.4M", change: "+12.3%", up: true, icon: "📈", color: "#059669", bg: "#f0fdf4" },
+            { label: "Total SKU Active", value: "2,847", change: "+23 new", up: true, icon: "📦", color: "#2563eb", bg: "#eff6ff" },
+            { label: "Low Stock Alerts", value: "38", change: "Needs reorder", up: false, icon: "⚠️", color: "#d97706", bg: "#fffbeb" },
+            { label: "Dead Stock Items", value: "124", change: "Rp 4.2M tied up", up: false, icon: "📉", color: "#dc2626", bg: "#fef2f2" },
+        ];
+
+        const stockMatrix = [
+            { label: "Fast Moving", count: 1450, desc: "Turnover < 7 days", color: "#10b981", bg: "#f0fdf4", textColor: "#047857" },
+            { label: "Slow Moving", count: 830, desc: "Turnover 7–30 days", color: "#f59e0b", bg: "#fffbeb", textColor: "#b45309" },
+            { label: "Dead Stock", count: 124, desc: "No movement > 30 days", color: "#ef4444", bg: "#fef2f2", textColor: "#b91c1c" },
+        ];
+
+        const recommendations = [
+            { title: "Bundle Promo: Dead Stock", desc: "124 items with 0 movement. Create bundle discount to clear Rp 4.2M stock.", tag: "Action Required", tagColor: "#fee2e2", tagTextColor: "#991b1b" },
+            { title: "Reorder: Mineral Water", desc: "Stock at 42 units (below reorder point of 100). Place PO to PT Sumber.", tag: "Low Stock", tagColor: "#fef3c7", tagTextColor: "#92400e" },
+            { title: "Optimize: Dairy Shelf", desc: "Dairy category shows 38% slow-moving rate. Review pricing strategy.", tag: "Optimize", tagColor: "#dbeafe", tagTextColor: "#1e40af" },
+        ];
+
+        // Utility Functions
+        function formatIDR(val) {
+            return `Rp ${(val / 1000000).toFixed(0)}M`;
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString();
+        }
+
+        // Render KPI Cards
+        function renderKPICards() {
+            const container = document.getElementById('kpiContainer');
+            container.innerHTML = kpiCards.map(kpi => `
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon" style="background: ${kpi.bg};">${kpi.icon}</div>
+                        <span class="kpi-change ${kpi.up ? 'positive' : 'negative'}">${kpi.change}</span>
+                    </div>
+                    <p class="kpi-label">${kpi.label}</p>
+                    <p class="kpi-value">${kpi.value}</p>
+                </div>
+            `).join('');
+        }
+
+        // Render Stock Matrix
+        function renderStockMatrix() {
+            const container = document.getElementById('stockMatrix');
+            const total = stockMatrix.reduce((sum, item) => sum + item.count, 0);
+            
+            container.innerHTML = stockMatrix.map(item => {
+                const percentage = (item.count / total) * 100;
+                return `
+                    <div class="stock-item" style="background: ${item.bg}; border-color: ${item.color};">
+                        <div class="stock-header">
+                            <span class="stock-label" style="color: ${item.textColor};">${item.label}</span>
+                            <span class="stock-count" style="color: ${item.textColor};">${formatNumber(item.count)}</span>
+                        </div>
+                        <p class="stock-description">${item.desc}</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="background: ${item.color}; width: ${percentage}%;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render Recommendations
+        function renderRecommendations() {
+            const container = document.getElementById('recommendationsContainer');
+            container.innerHTML = recommendations.map(rec => `
+                <div class="recommendation-box">
+                    <div class="recommendation-header">
+                        <p class="recommendation-title">${rec.title}</p>
+                        <span class="recommendation-tag" style="background: ${rec.tagColor}; color: ${rec.tagTextColor};">${rec.tag}</span>
+                    </div>
+                    <p class="recommendation-desc">${rec.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        // Render Approvals
+        function renderApprovals() {
+            const container = document.getElementById('approvalsContainer');
+            const countBadge = document.getElementById('approvalCount');
+            
+            countBadge.textContent = pendingApprovals.length;
+            
+            container.innerHTML = pendingApprovals.map(approval => {
+                const urgencyClass = `urgency-${approval.urgency}`;
+                return `
+                    <div class="approval-row">
+                        <div class="urgency-indicator ${urgencyClass}"></div>
+                        <div class="approval-details">
+                            <div class="approval-id">
+                                <span class="approval-id-text">${approval.id}</span>
+                                <span class="approval-type-badge">${approval.type}</span>
+                            </div>
+                            <p class="approval-supplier">${approval.supplier}</p>
+                        </div>
+                        <p class="approval-amount">${approval.amount}</p>
+                        <div class="approval-actions">
+                            <button class="btn btn-small btn-approve">✓ Approve</button>
+                            <button class="btn btn-small btn-review">Review</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Simple Canvas Chart for Revenue
+        function drawRevenueChart() {
+            const canvas = document.getElementById('revenueChart');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 40;
+            const maxValue = 80000000;
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (height - padding * 2) * (i / 4);
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - 20, y);
+                ctx.stroke();
+            }
+            
+            ctx.strokeStyle = '#6b7280';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - 20, height - padding);
+            ctx.stroke();
+            
+            const chartWidth = width - padding - 20;
+            const chartHeight = height - padding * 2;
+            const pointSpacing = chartWidth / (salesTrend.length - 1);
+            
+            ctx.strokeStyle = '#2563eb';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            salesTrend.forEach((point, index) => {
+                const x = padding + index * pointSpacing;
+                const y = height - padding - (point.revenue / maxValue) * chartHeight;
+                if (index === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            
+            const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
+            gradient.addColorStop(0, 'rgba(37, 99, 235, 0.1)');
+            gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
+            
+            ctx.lineTo(width - 20, height - padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            ctx.fillStyle = '#2563eb';
+            salesTrend.forEach((point, index) => {
+                const x = padding + index * pointSpacing;
+                const y = height - padding - (point.revenue / maxValue) * chartHeight;
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '11px sans-serif';
+            ctx.textAlign = 'center';
+            
+            salesTrend.forEach((point, index) => {
+                const x = padding + index * pointSpacing;
+                ctx.fillText(point.month, x, height - 20);
+            });
+            
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (height - padding * 2) * (i / 4);
+                const value = maxValue * (1 - i / 4);
+                ctx.fillText(formatIDR(value), padding - 10, y + 4);
+            }
+        }
+
+        // Draw Category Chart
+        function drawCategoryChart() {
+            const canvas = document.getElementById('categoryChart');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 40;
+            const maxValue = 500;
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (height - padding * 2) * (i / 4);
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - 20, y);
+                ctx.stroke();
+            }
+            
+            ctx.strokeStyle = '#6b7280';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - 20, height - padding);
+            ctx.stroke();
+            
+            const chartWidth = width - padding - 20;
+            const chartHeight = height - padding * 2;
+            const categoryWidth = chartWidth / categoryStock.length;
+            const barWidth = categoryWidth * 0.25;
+            const colors = ['#2563eb', '#d97706', '#dc2626'];
+            
+            categoryStock.forEach((category, catIndex) => {
+                const categoryX = padding + catIndex * categoryWidth;
+                const barX = categoryX + categoryWidth / 2 - (barWidth * 1.5);
+                
+                [category.fastMoving, category.slowMoving, category.deadStock].forEach((value, barIndex) => {
+                    const x = barX + barIndex * barWidth;
+                    const barHeight = (value / maxValue) * chartHeight;
+                    const y = height - padding - barHeight;
+                    
+                    ctx.fillStyle = colors[barIndex];
+                    ctx.fillRect(x, y, barWidth - 2, barHeight);
+                });
+            });
+            
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '11px sans-serif';
+            ctx.textAlign = 'center';
+            
+            categoryStock.forEach((category, index) => {
+                const x = padding + index * categoryWidth + categoryWidth / 2;
+                ctx.fillText(category.category, x, height - 20);
+            });
+            
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (height - padding * 2) * (i / 4);
+                const value = maxValue * (1 - i / 4);
+                ctx.fillText(value.toString(), padding - 10, y + 4);
+            }
+        }
+
+        // Initialize
+        function init() {
+            renderKPICards();
+            renderStockMatrix();
+            renderRecommendations();
+            renderApprovals();
+            
+            setTimeout(() => {
+                drawRevenueChart();
+                drawCategoryChart();
+            }, 100);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+        window.addEventListener('resize', () => {
+            drawRevenueChart();
+            drawCategoryChart();
+        });
+    </script>
+</body>
+</html>

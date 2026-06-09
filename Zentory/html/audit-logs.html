@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zentory - Audit Logs</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/pages.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h3>Zentory</h3>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">Dashboard</a>
+                <a href="inventory.html" class="nav-item">Inventory</a>
+                <a href="procurement.html" class="nav-item">Procurement</a>
+                <a href="pos.html" class="nav-item">POS</a>
+                <a href="sales-returns.html" class="nav-item">Sales Returns</a>
+                <a href="audit-logs.html" class="nav-item active">Audit Logs</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h1>Audit Logs</h1>
+                <p>Laporan lengkap aktivitas sistem</p>
+            </div>
+
+            <div class="controls">
+                <input type="text" class="search-box" placeholder="Cari aktivitas...">
+                <button class="btn">Filter</button>
+                <button class="btn btn-primary">📥 Export</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Module</th>
+                            <th>Details</th>
+                            <th>IP Address</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const auditData = [
+            { timestamp: "2024-12-09 14:35:22", user: "Dewi R.", action: "create", module: "Purchase Order", details: "Created PO-2024-089 for Rp 12.5M", ip: "192.168.1.45", status: "success" },
+            { timestamp: "2024-12-09 14:32:15", user: "Ahmad W.", action: "update", module: "Inventory", details: "Updated stock for BEV-001 (342 → 320)", ip: "192.168.1.32", status: "success" },
+            { timestamp: "2024-12-09 14:28:47", user: "Siti N.", action: "view", module: "Dashboard", details: "Accessed Manager Dashboard", ip: "192.168.1.78", status: "success" },
+            { timestamp: "2024-12-09 14:20:33", user: "Budi S.", action: "delete", module: "Inventory", details: "Deleted SKU TNK-003 (obsolete)", ip: "192.168.1.55", status: "success" },
+            { timestamp: "2024-12-09 14:15:12", user: "Rudi H.", action: "create", module: "Sales", details: "Processed sale transaction RCP-2024-4521", ip: "192.168.1.89", status: "success" },
+            { timestamp: "2024-12-09 14:10:55", user: "Dewi R.", action: "update", module: "Purchase Order", details: "Approved PO-2024-088", ip: "192.168.1.45", status: "success" },
+            { timestamp: "2024-12-09 14:05:21", user: "System", action: "create", module: "Report", details: "Generated monthly inventory report", ip: "127.0.0.1", status: "success" },
+            { timestamp: "2024-12-09 13:58:43", user: "Ahmad W.", action: "view", module: "Audit Logs", details: "Accessed audit log viewer", ip: "192.168.1.32", status: "success" },
+            { timestamp: "2024-12-09 13:45:30", user: "Siti N.", action: "update", module: "Inventory", details: "Updated reorder point for SNK-001", ip: "192.168.1.78", status: "success" },
+            { timestamp: "2024-12-09 13:30:15", user: "Budi S.", action: "create", module: "Sales Return", details: "Registered return RET-2024-101", ip: "192.168.1.55", status: "success" },
+        ];
+
+        function getActionBadge(action) {
+            const actionMap = {
+                'create': { class: 'badge-create', text: 'CREATE' },
+                'update': { class: 'badge-update', text: 'UPDATE' },
+                'delete': { class: 'badge-delete', text: 'DELETE' },
+                'view': { class: 'badge-view', text: 'VIEW' }
+            };
+            const info = actionMap[action] || actionMap['view'];
+            return `<span class="badge ${info.class}">${info.text}</span>`;
+        }
+
+        function renderAudit() {
+            const table = document.getElementById('auditTable');
+            table.innerHTML = auditData.map(item => `
+                <tr>
+                    <td class="timestamp">${item.timestamp}</td>
+                    <td><span class="user-name">${item.user}</span></td>
+                    <td>${getActionBadge(item.action)}</td>
+                    <td>${item.module}</td>
+                    <td class="details" title="${item.details}">${item.details}</td>
+                    <td class="timestamp">${item.ip}</td>
+                    <td><span class="badge badge-create">${item.status.toUpperCase()}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', renderAudit);
+    </script>
+</body>
+</html>
